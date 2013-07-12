@@ -1,24 +1,10 @@
-#!/usr/bin/env python
-"""
-Create a dictionary of directed graphs, allowing multiple edges and self loops, from
-a file of names and relations.  The nodes are concepts with links
-that point from the believed cause to the believed effect.  The edge data
-is a sign label.
+import string
+from GraphWorld import GraphWorld, GraphCanvas, Layout, CircleLayout, RandomLayout
+import DirectedGraphWorld, nltk
 
-"""
-__author__ = """Johannes Castner (jac2130@columbia.edu)"""
-#    Copyright (C) 2013 by
-#    Johannes Castner <jac2130@columbia.edu>
-#    All rights reserved.
-#    BSD license.
+from DirectedGraph import SignedArc, DirectedGraph
 
-#import string
-#from GraphWorld import GraphWorld, GraphCanvas, Layout, CircleLayout, RandomLayout
-#import DirectedGraphWorld, nltk
-
-from networkx import DiGraph
-import matplotlib.pyplot as plt
-#from Graph import Vertex, Graph
+from Graph import Vertex, Graph
 
 class Sgn(object):
     """A Sgn is the sign of causation in a causal graph."""
@@ -42,10 +28,9 @@ class Sgn(object):
     """The str and repr forms of this object are the same."""
 
 
-class CausalGraph(DiGraph):
+class CausalGraph(DirectedGraph):
 
     def __init__(self,vs=set(),es=set()):
-        DiGraph.__init__(self)
         """
         Creates a new directed graph.
         @Args:
@@ -54,29 +39,30 @@ class CausalGraph(DiGraph):
         @Returns:
             None
         """
-
-        self.add_nodes_from(vs)
+        self.reverse_graph = {} #keeps a map of in-vertices
+        for v in vs:
+            self.add_vertex(v)
         for e in es:
             self.add_signed_arc(e)
 
     def add_signed_arc(self, e):
         """
-        Creates a signed arc FROM v TO w.
-
+        Creates an arc FROM v TO w (As a value of v in the internal dictionary).
+        Adds same arc TO w FROM v (As a value of w in the reverse dictionary).
         @Args:
             An Arc e
         @Returns:
             None
         """
         v, sgn, w = e
-        #if v == w:
-        #    raise LoopError('An arc cannot exist from a vertex to itself.')
+        if v == w:
+            raise LoopError('An arc cannot exist from a vertex to itself.')
 
-        self.add_edges_from([(v, w, {'sign': sgn})])
+        self[v][w] = e
 
-        #self.reverse_graph[w][v] = e
+        self.reverse_graph[w][v] = e
 
-    add_arc = add_edge = add_signed_arc
+    add_arc = add_edge=add_signed_arc
     """We only want to add arcs, not edges"""
 
 from collections import defaultdict
@@ -102,7 +88,7 @@ class Discussion(defaultdict):
             which is then either found or not. If it is not found, a new causal graph (or belief system)
             is created and indexed by the person's name in the dictionary of names, mapping to causal beliefs.
             If the name is found, or if it has been entered in the dictionary, it starts updating that person's
-            belief system with the following lines, until another name is encountered.
+            believes with the following lines untul another name is encountered.
             people, a dictionary mapping from names of senators, to their belief systems (causal graphs)
         @Returns:
             None
@@ -211,36 +197,36 @@ def and_split(line):
     return line.split("/ AND /")
 
 
-#def main(script, *args):
-#    path="/home/johannes/Dropbox/CausalAssertions/"
-#    import os
-#    os.chdir(path)
-
+def main(script, *args):
+    path="/home/johannes/Dropbox/CausalAssertions/"
+    import os
+    os.chdir(path)
+    #This is where the output from DataTemple will go and where this output gets converted to a list of signed arcs:
 
    #try this for a causal graph that is taking as its input all of the actual output from all of our sample sentences and templates. It is visually hard to interpret:
     #es=[sarc_from_string(line) for text in open('outputs.txt', "r") for line in and_split(text)]
 
-#    linez=[line.lstrip().rstrip() for text in open('demo_output.txt', "r").read().split("\n") for line in and_split(text)]
+    linez=[line.lstrip().rstrip() for text in open('demo_output.txt', "r").read().split("\n") for line in and_split(text)]
 #Making sure that concepts that have been considered to be unique are uniquely represented in the causal graph:
 
-#    discussion =Discussion(linez)
-#    import CausalGraphWorld
-#    key=discussion.keys()[1]
-#    graph=discussion[key]
-#    show_causal_graph(graph, write_postscript=True, filename=key + '.ps')
-#    key_table= sorted([(value, key) for key, value in discussion.relable.items()])
-#    for value, key in key_table:
-#        print "%s = %s" % (value, key) #Print out what the new values mean.
+    discussion =Discussion(linez)
+    import CausalGraphWorld
+    key=discussion.keys()[1]
+    graph=discussion[key]
+    show_causal_graph(graph, write_postscript=True, filename=key + '.ps')
+    key_table= sorted([(value, key) for key, value in discussion.relable.items()])
+    for value, key in key_table:
+        print "%s = %s" % (value, key) #Print out what the new values mean.
     #os.system('ps2pdf -dDEVICEWIDTHPOINTS=600 -dDEVICEHEIGHTPOINTS=600' + ' ' + key +'.ps') #there is some issue that I still have to resolve.
     #os.system("pdfcrop -margins 10 " + key + '.pdf' + ' ' + key + '.pdf')
     #print arc_c
     #print arc_b
     #print vs
     ###print key
-#    print discussion['fleming'].keys()
-#    print discussion.keys( )
+    print discussion['fleming'].keys()
+    print discussion.keys( )
     #print discussion[''] why is Mrs. MCMORRIS RODGERS. not entered into the discussion object?
 
-#if __name__ == '__main__':
-#    import sys
-#    main(*sys.argv)
+if __name__ == '__main__':
+    import sys
+    main(*sys.argv)
