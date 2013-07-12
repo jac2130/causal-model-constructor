@@ -12,10 +12,7 @@ __author__ = """Johannes Castner (jac2130@columbia.edu)"""
 #    All rights reserved.
 #    BSD license.
 
-#import string
-#from GraphWorld import GraphWorld, GraphCanvas, Layout, CircleLayout, RandomLayout
-#import DirectedGraphWorld, nltk
-
+import string
 from networkx import DiGraph
 import matplotlib.pyplot as plt
 #from Graph import Vertex, Graph
@@ -41,6 +38,37 @@ class Sgn(object):
     __str__ = __repr__
     """The str and repr forms of this object are the same."""
 
+class SignedArc(tuple):
+    """
+    Represents a Directed arc FROM Directed Vertex v TO Directed Vertex w.
+    """
+    def __new__(cls, vs):
+        """The Arc Constructor takes two vertices"""
+        if len(vs) != 3:
+            raise ValueError, 'SignedArcs must connect exactly two vertices and have one relationship'
+        return tuple.__new__(cls,vs)
+
+    def __repr__(self):
+        """Return a string representation of this arc
+         that can be evaluated as a Python expression."""
+        return 'Arc(%s / %s / %s)' %(repr(self[0]), repr(self[1]), repr(self[2]))
+
+    __str__ = __repr__
+
+class Vertex(object):
+    """A Vertex is a node in a graph."""
+
+    def __init__(self, label=''):
+        self.label = label
+        self.color = "yellow"
+
+    def __repr__(self):
+        """Returns a string representation of this object that can
+        be evaluated as a Python expression."""
+        return 'Vertex(%s)' % repr(self.label)
+
+    __str__ = __repr__
+    """The str and repr forms of this object are the same."""
 
 class CausalGraph(DiGraph):
 
@@ -142,7 +170,7 @@ class Discussion(defaultdict):
         #import pdb
         #pdb.set_trace()
         arcs=[sarc_from_string(chunk) for chunk in and_split(line)]
-        vs=sorted(set(self[name].keys()))
+        vs=sorted(set(self[name].nodes()))
         vs_labels=[key.label for key in vs]
         vs_short       =[key for key in vs if len(key.label)==2]
         vs_short_labels=set([key.label for key in vs if len(key.label)==2])
@@ -185,20 +213,21 @@ class Discussion(defaultdict):
 
             if x.label not in vs_labels:
                 vs.append(x)
-                self[name].add_vertex(x)
+                self[name].add_node(x)
             if y.label not in vs_labels:
                 vs.append(y)
-                self[name].add_vertex(y)
+                self[name].add_node(y)
 
             arc1= x, sgn, y
 
             self[name].add_signed_arc(arc1)
 
+
 def sarc_from_string(line):
     cause=Vertex(line.split("/")[0].lstrip().rstrip()) #stripping out white space on both ends of the string
     sgn=Sgn(line.split("/")[1].lstrip().rstrip())
     effect=Vertex(line.split('/')[2].lstrip().rstrip())
-    return SignedArc([cause, sgn, effect])
+    return (cause, sgn, effect)
 
 def is_name(line):
     line=line.split(' ')
