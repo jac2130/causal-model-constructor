@@ -22,13 +22,19 @@ class Sgn(object):
 
     def __init__(self, label='0'):
         self.label = label
+        #the mu, sigma values can be played with (their purpose is for a difference measure between graphs that I use to construct my diversity measures, as in Weitzman, 1992)
         if self.label=='0':
-            self.color = "blue"
+            self.mu = 0; self.sigma=1
         elif self.label=='+':
-            self.color="black"
+            self.mu = 2; self.sigma=1
         elif self.label =='-':
-            self.color="red"
-        else: self.color="orange"
+            self.mu = -2; self.sigma=1
+        elif self.label == 'oplus':
+            self.mu = 2; self.sigma=2
+        elif self.label == 'ominus':
+            self.mu = -2; self.sigma=2
+        else:
+            self.mu = 0; self.sigma=3 #the ambiguous case.
 
 
     def __repr__(self):
@@ -136,7 +142,7 @@ class Discussion(defaultdict):
             None
         """
 
-        self.name=name
+        self.name=repr(name)
         self.relable=defaultdict(str)
         self.people=set(people + self.keys())
         self.new_names=list(set(people)-set(self.keys())) #New People being added.
@@ -152,18 +158,18 @@ class Discussion(defaultdict):
         for i in range(len(lines)-1):
             if is_name(lines[i]):
                 if len(lines[i].split(' '))>2:
-                    if lines[i].split(' ')[2].upper()==lines[i].split(' ')[2]:
+                    if lines[i].split(' ')[2].upper()==lines[i].split(' ')[2] and lines[i].split(' ')[2] not in set(['.', '!', ',',';',':','?']):
                         self.name=lines[i].split('.')[2].lower().lstrip().rstrip()
                     else:
                         self.name=lines[i].split('.')[1].lower().lstrip().rstrip()
                 else:
                     self.name=lines[i].split('.')[1].lower().lstrip().rstrip()
-                name=self.name
+                name=str(self.name)
                 if name not in self.keys():
                     self[name]=CausalGraph()
                 self.add_causal_believes(name, lines[i+1])
             else:
-                name=self.name
+                name=str(self.name)
                 self.add_causal_believes(name, lines[i])
 
     def add_causal_believes(self, name, line, alph=alpnum_cycle()):
