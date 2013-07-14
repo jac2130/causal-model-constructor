@@ -19,7 +19,7 @@ import matplotlib.pyplot as plt
 
 class Sgn(object):
     """A Sgn is the sign of causation in a causal graph."""
-
+    # problem with edges not having mu and sigma. Have to attach edges differently!
     def __init__(self, label='0'):
         self.label = label
         #the mu, sigma values can be played with (their purpose is for a difference measure between graphs that I use to construct my diversity measures, as in Weitzman, 1992)
@@ -89,9 +89,10 @@ class CausalGraph(DiGraph):
             None
         """
 
-        self.add_nodes_from(vs)
+        self.add_nodes_from([v.label for v in vs])
         for e in es:
             self.add_signed_arc(e)
+
 
     def add_signed_arc(self, e):
         """
@@ -105,8 +106,12 @@ class CausalGraph(DiGraph):
         v, sgn, w = e
         #if v == w:
         #    raise LoopError('An arc cannot exist from a vertex to itself.')
+        a=v.label if type(v)==Vertex else v
+        b=w.label if type(w)==Vertex else w
+        mu =sgn.mu
+        sigma=sgn.sigma
 
-        self.add_edges_from([(v, w, {'sign': sgn})])
+        self.add_edges_from([(a, b, {'sigma': sigma, 'mu':mu})])
 
         #self.reverse_graph[w][v] = e
 
@@ -177,9 +182,9 @@ class Discussion(defaultdict):
         #pdb.set_trace()
         arcs=[sarc_from_string(chunk) for chunk in and_split(line)]
         vs=sorted(set(self[name].nodes()))
-        vs_labels=[key.label for key in vs]
-        vs_short       =[key for key in vs if len(key.label)==2]
-        vs_short_labels=set([key.label for key in vs if len(key.label)==2])
+        #vs_labels=[key.label for key in vs]
+        #vs_short       =[key for key in vs if len(key.label)==2]
+        #vs_short_labels=set([key.label for key in vs if len(key.label)==2])
         for arc in arcs:
             x, sgn, y = arc
 
@@ -219,10 +224,10 @@ class Discussion(defaultdict):
 
             if x.label not in vs_labels:
                 vs.append(x)
-                self[name].add_node(x)
+                self[name].add_node(x.label)
             if y.label not in vs_labels:
                 vs.append(y)
-                self[name].add_node(y)
+                self[name].add_node(y.label)
 
             arc1= x, sgn, y
 
