@@ -66,7 +66,7 @@ class Vertex(object):
 
     def __init__(self, label=''):
         self.label = label
-        self.color = "yellow"
+        self.concept = str(label) #make a string copy of the label; later to be converted into a networkx node attribute.
 
     def __repr__(self):
         """Returns a string representation of this object that can
@@ -106,8 +106,8 @@ class CausalGraph(DiGraph):
         v, sgn, w = e
         #if v == w:
         #    raise LoopError('An arc cannot exist from a vertex to itself.')
-        a=v.label if type(v)==Vertex else v
-        b=w.label if type(w)==Vertex else w
+        a, concept_a=v.label, v.concept if type(v)==Vertex else v
+        b, concept_b=w.label, w.concept if type(w)==Vertex else w
         mu =sgn.mu
         sigma=sgn.sigma
 
@@ -152,8 +152,8 @@ class Discussion(defaultdict):
         self.people=set(people + self.keys())
         self.new_names=list(set(people)-set(self.keys())) #New People being added.
         self.process_lines(lines)
-        self.concepts=set()
-# have to store all concepts and then check for each concept (before adding it to a causal graph) if it already exists in the set or not; if it exists, I find the representative label with which it is labelled in the first causal graph to which it was added. Also, this set of concepts is the raw material of the data set of concepts wherein 3000 or so concepts that are identical in meaning are paired by hand and then a machiene learning algorithm will be trained on the training set (the first x paired concepts) to learn which concepts are in meaning identical. Later, the causal-belief-graphs will be simplified, using this tool.
+        self.concepts=set(self.relable.keys())
+# have to store all concepts and then check for each concept (before adding it to a causal graph) if it already exists in the set or not; if it exists, I find the representative label with which it is labelled in the first causal graph to which it was added. Also, this set of concepts is the raw material of the data set of concepts wherein 3000 or so concepts that are identical in meaning are paired by hand and then a machiene learning algorithm will be trained on the training set (the first x paired concepts) to learn which concepts are in meaning identical. Later, the causal-belief-graphs will be simplified, using this tool. The concepts are also stored in each node, under the key "concept". The greatest advantage of using networkx is that all kinds of information, including affective information, can be stored in each link and each concept, making these cognitive maps greatly extendable beyond the causal!
 
         for name in self.new_names:
             self[name]=CausalGraph()
@@ -196,7 +196,9 @@ class Discussion(defaultdict):
 
 
                 self.relable[x.label]=alph.next()
+                self.concepts.add(x.label)
                 x.label=self.relable[x.label]
+
 
 
             else:
@@ -207,10 +209,8 @@ class Discussion(defaultdict):
             if self.relable[y.label]=='':
 
                 self.relable[y.label]=alph.next()
+                self.concepts.add(y.label)
                 y.label=self.relable[y.label]
-
-
-
 
             else:
                 y.label=self.relable[y.label]
@@ -225,10 +225,10 @@ class Discussion(defaultdict):
 
             if x.label not in vs_labels:
                 vs.append(x)
-                self[name].add_node(x.label)
+                self[name].add_node(x.label, concept=x.concept)
             if y.label not in vs_labels:
                 vs.append(y)
-                self[name].add_node(y.label)
+                self[name].add_node(y.label, concept=y.concept)
 
             arc1= x, sgn, y
 
