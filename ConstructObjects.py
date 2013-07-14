@@ -153,6 +153,7 @@ class Discussion(defaultdict):
         self.new_names=list(set(people)-set(self.keys())) #New People being added.
         self.process_lines(lines)
         self.concepts=set()
+# have to store all concepts and then check for each concept (before adding it to a causal graph) if it already exists in the set or not; if it exists, I find the representative label with which it is labelled in the first causal graph to which it was added. Also, this set of concepts is the raw material of the data set of concepts wherein 3000 or so concepts that are identical in meaning are paired by hand and then a machiene learning algorithm will be trained on the training set (the first x paired concepts) to learn which concepts are in meaning identical. Later, the causal-belief-graphs will be simplified, using this tool.
 
         for name in self.new_names:
             self[name]=CausalGraph()
