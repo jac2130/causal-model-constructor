@@ -92,6 +92,7 @@ class CausalGraph(DiGraph):
         self.add_nodes_from([v.label for v in vs])
         for e in es:
             self.add_signed_arc(e)
+        self.edge_labels=dict([((u,v,),d['label']) for u,v,d in self.edges(data=True)])
 
 
     def add_signed_arc(self, e):
@@ -110,10 +111,22 @@ class CausalGraph(DiGraph):
         b, concept_b=w.label, w.concept if type(w)==Vertex else w
         mu =sgn.mu
         sigma=sgn.sigma
+        label=sgn.label
 
-        self.add_edges_from([(a, b, {'sigma': sigma, 'mu':mu})])
-
+        self.add_edges_from([(a, b, {'sigma': sigma, 'mu':mu, 'label':label})])
+        self.edge_labels.update({(a, b):label})
         #self.reverse_graph[w][v] = e
+
+    def draw(self, pos='circular'):
+        import pylab
+        import networkx as nx
+        layout = {'circular': nx.circular_layout(self), 'shell': nx.shell_layout(self), 'spectral': nx.spectral_layout(self), 'spring': nx.spring_layout(self), 'random': nx.random_layout(self)}
+
+        pos=layout[pos]
+        pylab.figure(1)
+        nx.draw(self,pos)
+        nx.draw_networkx_edge_labels(self,pos,edge_labels=self.edge_labels)
+        pylab.show()
 
     add_arc = add_edge = add_signed_arc
     """We only want to add arcs, not edges"""
@@ -233,7 +246,6 @@ class Discussion(defaultdict):
             arc1= x, sgn, y
 
             self[name].add_signed_arc(arc1)
-
 
 def sarc_from_string(line):
     cause=Vertex(line.split("/")[0].lstrip().rstrip()) #stripping out white space on both ends of the string
